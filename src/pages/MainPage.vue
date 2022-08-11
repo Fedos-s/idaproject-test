@@ -3,19 +3,24 @@
     <div class="main_container content">
       <div class="content__top">
         <h2 class="title">Добавление товара</h2>
-        <select name="filters" id="filter-select" class="select-filter">
+        <select
+          name="filters"
+          id="filter-select"
+          class="select-filter"
+          v-model="filter"
+        >
           <option class="select-placeholder" value="" disabled selected hidden>
             По умолчанию
           </option>
-          <option value="name">А-Я</option>
-          <option value="max">Max-Min</option>
-          <option value="min">Min-Max</option>
+          <option>А-Я</option>
+          <option>Max-Min</option>
+          <option>Min-Max</option>
         </select>
       </div>
       <div class="content__catalog">
         <AddForm :newProduct.sync="newProduct" />
 
-        <PagePreloader v-if="preloader"/>
+        <PagePreloader v-if="preloader" />
 
         <section v-else class="catalog">
           <transition-group name="product" tag="ul" class="catalog__list">
@@ -44,9 +49,9 @@
                   <p class="catalog__text">
                     {{ product.about }}
                   </p>
-                  <span class="catalog__price">
+                  <div class="catalog__price">
                     {{ product.price | PriceFormat }} ₽
-                  </span>
+                  </div>
                 </div>
               </a>
             </li>
@@ -60,7 +65,7 @@
 <script>
 import AddForm from "@/components/AddForm.vue";
 import PriceFormat from "@/filters/PriceFormat";
-import PagePreloader from '@/components/PagePreloader.vue';
+import PagePreloader from "@/components/PagePreloader.vue";
 
 export default {
   data() {
@@ -93,12 +98,14 @@ export default {
         },
       ],
       preloader: true,
-      filter: null,
+      filter: "",
     };
   },
   components: { AddForm, PagePreloader },
   filters: { PriceFormat },
   methods: {
+    //Работа с массивом продуктов
+    //Добавление нового
     addNewProduct() {
       if (this.newProduct) {
         this.products.push({
@@ -112,9 +119,11 @@ export default {
           link: this.newProduct.link,
           price: this.newProduct.price,
         });
+        this.sortProducts();
         this.saveProducts();
       }
     },
+    //Удаление продукта
     removeProduct(id) {
       this.products.splice(
         this.products.findIndex((e) => e.id === id),
@@ -122,9 +131,25 @@ export default {
       );
       this.saveProducts();
     },
+    //Сохранение в локальном хранилище
     saveProducts() {
       const parsed = JSON.stringify(this.products);
       localStorage.setItem("products", parsed);
+      localStorage.filter = this.filter;
+    },
+
+    //Сортировка массива
+    sortProducts() {
+      switch (this.filter) {
+        case "А-Я":
+          return this.products.sort((a, b) => a.name.localeCompare(b.name));
+        case "Max-Min":
+          return this.products.sort((a, b) => b.price - a.price);
+        case "Min-Max":
+          return this.products.sort((a, b) => a.price - b.price);
+        default:
+          return;
+      }
     },
   },
   watch: {
@@ -132,7 +157,12 @@ export default {
       this.addNewProduct();
       this.newProduct = null;
     },
+    filter() {
+      this.sortProducts();
+      this.saveProducts();
+    },
   },
+  //При загрузке страницы проверяем наличие данных в локальном хранилище и вызываем прелоадер
   mounted() {
     this.preloader = true;
     if (localStorage.getItem("products")) {
@@ -142,10 +172,12 @@ export default {
         localStorage.removeItem("products");
       }
     }
+    if(localStorage.getItem("filter")) {
+        this.filter = localStorage.filter
+    }
     setTimeout(() => {
-        this.preloader = false;
-    }, 1000)  
-    
+      this.preloader = false;
+    }, 1000);
   },
 };
 </script>

@@ -177,13 +177,4 @@ export default {
 
 <style lang="scss" scoped>
 @import "@/assets/styles.scss";
-
-.added-enter-active,
-.added-leave-active {
-  transition: all .5s;
-}
-.added-enter,
-.added-leave-to {
-  opacity: 0;
-}
 </style>
