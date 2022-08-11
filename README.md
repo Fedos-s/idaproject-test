@@ -1,6 +1,6 @@
 # test-idaproject
 
-## Тест овое задание Idaproject
+## Тестовое задание Idaproject
 
 ## Project setup
 ```
