@@ -15,7 +15,9 @@
       <div class="content__catalog">
         <AddForm :newProduct.sync="newProduct" />
 
-        <section class="catalog">
+        <PagePreloader v-if="preloader"/>
+
+        <section v-else class="catalog">
           <transition-group name="product" tag="ul" class="catalog__list">
             <li
               class="catalog__item"
@@ -58,6 +60,7 @@
 <script>
 import AddForm from "@/components/AddForm.vue";
 import PriceFormat from "@/filters/PriceFormat";
+import PagePreloader from '@/components/PagePreloader.vue';
 
 export default {
   data() {
@@ -89,9 +92,11 @@ export default {
           price: 10000,
         },
       ],
+      preloader: true,
+      filter: null,
     };
   },
-  components: { AddForm },
+  components: { AddForm, PagePreloader },
   filters: { PriceFormat },
   methods: {
     addNewProduct() {
@@ -107,6 +112,7 @@ export default {
           link: this.newProduct.link,
           price: this.newProduct.price,
         });
+        this.saveProducts();
       }
     },
     removeProduct(id) {
@@ -114,6 +120,11 @@ export default {
         this.products.findIndex((e) => e.id === id),
         1
       );
+      this.saveProducts();
+    },
+    saveProducts() {
+      const parsed = JSON.stringify(this.products);
+      localStorage.setItem("products", parsed);
     },
   },
   watch: {
@@ -122,18 +133,24 @@ export default {
       this.newProduct = null;
     },
   },
+  mounted() {
+    this.preloader = true;
+    if (localStorage.getItem("products")) {
+      try {
+        this.products = JSON.parse(localStorage.getItem("products"));
+      } catch (error) {
+        localStorage.removeItem("products");
+      }
+    }
+    setTimeout(() => {
+        this.preloader = false;
+    }, 1000)  
+    
+  },
 };
 </script>
 
+
 <style lang="scss" scoped>
 @import "@/assets/styles.scss";
-// Animation
-.product-enter-active,
-.product-leave-active {
-  transition: opacity 5s;
-}
-.product-enter,
-.product-leave-to {
-  opacity: 0;
-}
 </style>
